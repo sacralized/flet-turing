@@ -86,7 +86,11 @@ def main(page: ft.Page):
         else:
             open_main_menu()
 
+    def on_source_click(e):
+        page.launch_url("https://github.com/sacralized/flet-turing/tree/master")
+
     menu.Return_Button.on_click = on_return_click
+    menu.Source_Button.on_click = on_source_click
 
 
 ft.app(target=main, view=ft.WEB_BROWSER,)
