@@ -11,5 +11,5 @@ pip install flet
 Run the program:
 
 ```bash
-python counter.py
+python main.py
 ```
