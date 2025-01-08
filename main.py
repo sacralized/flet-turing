@@ -93,4 +93,4 @@ def main(page: ft.Page):
     menu.Source_Button.on_click = on_source_click
 
 
-ft.app(target=main, view=ft.WEB_BROWSER,)
+ft.app(main)
