@@ -2,6 +2,7 @@
 
 import flet as ft
 import numpy as np
+import threading
 
 from detail.style.style_settings import *
 
@@ -15,6 +16,8 @@ class StateTable:
         self.Alphabet = np.unique(list(Alphabet.upper()))      
         # Dictionary containing all state rows (name/row)      
         self.StateRows = dict()
+
+        self.Lock = threading.Lock()
 
         self.Table = ft.Column(
             alignment=ft.MainAxisAlignment.START,
@@ -126,35 +129,36 @@ class StateTable:
 
 
     def create_new_state_row(self, RowName : str = ""):
-        if RowName == "":
-            RowIndex = 0
-            RowName = "q" + str(RowIndex)
-            while self.StateRows.__contains__(RowName):
-                RowIndex += 1
+        with self.Lock:
+            if RowName == "":
+                RowIndex = 0
                 RowName = "q" + str(RowIndex)
-        
-        new_row = ft.Row(
-            controls=[get_styled_text(RowName)],
-            spacing=CELL_SPACING
-        )
-        # Alphabet columns
-        for i in self.Alphabet:
+                while self.StateRows.__contains__(RowName):
+                    RowIndex += 1
+                    RowName = "q" + str(RowIndex)
+            
+            new_row = ft.Row(
+                controls=[get_styled_text(RowName)],
+                spacing=CELL_SPACING
+            )
+            # Alphabet columns
+            for i in self.Alphabet:
+                new_row.controls.append(self.__generate_new_cell__())
+            # Blank symbol column
             new_row.controls.append(self.__generate_new_cell__())
-        # Blank symbol column
-        new_row.controls.append(self.__generate_new_cell__())
-        #Delete row button
-        def delete_click(e):
-            self.Table.controls.remove(new_row)
-            self.StateRows.pop(RowName, None)
-            self.Page.update()
+            #Delete row button
+            def delete_click(e):
+                self.Table.controls.remove(new_row)
+                self.StateRows.pop(RowName, None)
+                self.Page.update()
 
-        delete_row_btn = ft.IconButton(
-            icon=ft.Icons.DELETE_FOREVER_ROUNDED,
-            icon_size=30,
-            tooltip="Delete state row",
-            on_click=delete_click,
-            width=STATE_TABLE_CELL_WIDTH,
-        )
-        new_row.controls.append(delete_row_btn)
-        self.StateRows[RowName] = new_row
-        self.Table.controls.append(new_row)
+            delete_row_btn = ft.IconButton(
+                icon=ft.Icons.DELETE_FOREVER_ROUNDED,
+                icon_size=30,
+                tooltip="Delete state row",
+                on_click=delete_click,
+                width=STATE_TABLE_CELL_WIDTH,
+            )
+            new_row.controls.append(delete_row_btn)
+            self.StateRows[RowName] = new_row
+            self.Table.controls.append(new_row)

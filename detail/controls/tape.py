@@ -100,7 +100,7 @@ class Tape:
         cell_scroll_to = self.cell_row.controls[index_scroll_to]
         self.cell_row.scroll_to(key=cell_scroll_to.key, duration=SCROLL_DURATION)
         
-
+    # Not thread-safe
     def move_left(self):
         old_index = self.head_index
         if self.head_index == 0:
@@ -109,7 +109,7 @@ class Tape:
             self.head_index -= 1
         self.__change_selection__(old_index)
         
-
+    # Not thread-safe
     def move_right(self):
         old_index = self.head_index
         self.head_index += 1

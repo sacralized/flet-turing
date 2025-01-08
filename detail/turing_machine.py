@@ -6,6 +6,7 @@ from detail.style.style_settings import *
 
 import numpy as np
 import json
+import threading
 
 
 MAX_ITER_COUNT = 1000
@@ -18,6 +19,7 @@ class TuringMachine():
         self.ResultText.width = 300
         self.End = True
         self.CurrentRow = ""
+        self.Lock = threading.Lock()
 
 
     # Get flet Text control, containing result
@@ -46,57 +48,58 @@ class TuringMachine():
 
     # Make one step
     def make_step(self):
-        if self.End:
-            self.__start_programm__()
-            return
+        with self.Lock:
+            if self.End:
+                self.__start_programm__()
+                return
 
-        if self.StateTable.StateRows.keys().__len__() == 0:
-            self.__append_result_text__(f"Error: There is no state table!\n")
-            self.__error_encountered__()
-            return
-        elif not self.StateTable.StateRows.keys().__contains__(self.CurrentRow):
-            self.__append_result_text__(f"Error: There is no state row named \"{self.CurrentRow}\"!\n")
-            self.__error_encountered__()
-            return
-        row : ft.Row = self.StateTable.StateRows[self.CurrentRow]
-        value = self.Tape.read_value()
-        # find element in alphabet
-        index = self.Tape.Alphabet.__len__()
-        for i, c in enumerate(self.Tape.Alphabet):
-            if value == c:
-                index = i
-                break
-        # Index + 1 because each row contain text block in the beggining
-        self.StateTable.make_active(self.CurrentRow, index + 1)
-        ValueToWrite, TapeAction, RowToJump = self.StateTable.parse_cell(self.StateTable.ActiveCell)
-        # Parse all actions
-        if not self.StateTable.is_valid_action(ValueToWrite, TapeAction, RowToJump):
-            self.__append_result_text__(f"Error: Incorrect input in cell [{self.CurrentRow}, {index + 1}]!\n")
-            self.__error_encountered__()
-            return
-        if ValueToWrite != "":
-            self.Tape.write_value(ValueToWrite)
-            if value != ValueToWrite:
-                self.__append_result_text__(f"Replace {value} -> {ValueToWrite}.\n")
+            if self.StateTable.StateRows.keys().__len__() == 0:
+                self.__append_result_text__(f"Error: There is no state table!\n")
+                self.__error_encountered__()
+                return
+            elif not self.StateTable.StateRows.keys().__contains__(self.CurrentRow):
+                self.__append_result_text__(f"Error: There is no state row named \"{self.CurrentRow}\"!\n")
+                self.__error_encountered__()
+                return
+            row : ft.Row = self.StateTable.StateRows[self.CurrentRow]
+            value = self.Tape.read_value()
+            # find element in alphabet
+            index = self.Tape.Alphabet.__len__()
+            for i, c in enumerate(self.Tape.Alphabet):
+                if value == c:
+                    index = i
+                    break
+            # Index + 1 because each row contain text block in the beggining
+            self.StateTable.make_active(self.CurrentRow, index + 1)
+            ValueToWrite, TapeAction, RowToJump = self.StateTable.parse_cell(self.StateTable.ActiveCell)
+            # Parse all actions
+            if not self.StateTable.is_valid_action(ValueToWrite, TapeAction, RowToJump):
+                self.__append_result_text__(f"Error: Incorrect input in cell [{self.CurrentRow}, {index + 1}]!\n")
+                self.__error_encountered__()
+                return
+            if ValueToWrite != "":
+                self.Tape.write_value(ValueToWrite)
+                if value != ValueToWrite:
+                    self.__append_result_text__(f"Replace {value} -> {ValueToWrite}.\n")
 
-        if TapeAction == "R":
-            self.Tape.move_right()
-            self.__append_result_text__(f"Move tape right.\n")
-        elif TapeAction == "L":
-            self.Tape.move_left()
-            self.__append_result_text__(f"Move tape left.\n")
+            if TapeAction == "R":
+                self.Tape.move_right()
+                self.__append_result_text__(f"Move tape right.\n")
+            elif TapeAction == "L":
+                self.Tape.move_left()
+                self.__append_result_text__(f"Move tape left.\n")
 
-        if RowToJump != "" and RowToJump != " " and self.StateTable.StateRows.__contains__(RowToJump):
-            self.CurrentRow = RowToJump
-        elif RowToJump == "!":
-            # End of programm
-            self.__end_of_programm__()
-        
-        self.IterCount += 1
-        if self.IterCount >= MAX_ITER_COUNT:
-            self.__append_result_text__(f"Error: Reached iteration count of {self.IterCount}!\n")
-            self.__error_encountered__()
-            return
+            if RowToJump != "" and RowToJump != " " and self.StateTable.StateRows.__contains__(RowToJump):
+                self.CurrentRow = RowToJump
+            elif RowToJump == "!":
+                # End of programm
+                self.__end_of_programm__()
+            
+            self.IterCount += 1
+            if self.IterCount >= MAX_ITER_COUNT:
+                self.__append_result_text__(f"Error: Reached iteration count of {self.IterCount}!\n")
+                self.__error_encountered__()
+                return
     
 
     def __start_programm__(self):
@@ -120,8 +123,7 @@ class TuringMachine():
             self.make_step()
         while not self.End:
             self.make_step()
-            self.StateTable.Page.update()
-            pass
+
 
     def serialize_to_json(self):
         state_table : dict[str, list[str]] = dict()
