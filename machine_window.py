@@ -57,7 +57,6 @@ def setup_table_page(page: ft.Page, Alphabet : str, StartingWord_ : str):
     # Add make step button
     def make_step_click(e):
         machine.make_step()
-        page.update()
 
     MakeStep_Button = ft.ElevatedButton(
         text="Make step",
@@ -76,7 +75,6 @@ def setup_table_page(page: ft.Page, Alphabet : str, StartingWord_ : str):
     # Add Run Button
     def run_click(e):
         machine.run_until_end()
-        page.update()
 
     Run_Button = ft.ElevatedButton(
         text="Run",
