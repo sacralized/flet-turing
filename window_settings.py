@@ -13,12 +13,13 @@ THEME = ft.Theme(
         secondary=ft.Colors.INDIGO_100,
     ),
 )
+THEME_MODE = "light"
 
 
 def apply_settings(page : ft.Page):
     page.title = TITLE
     page.theme = THEME
+    page.theme_mode = THEME_MODE
 
     page.scroll = ft.ScrollMode.AUTO
     page.expand = True
-    #page.adaptive = True
